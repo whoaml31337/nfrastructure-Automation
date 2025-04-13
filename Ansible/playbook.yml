@@ -1,6 +1,16 @@
-- hosts: all
+---
+- hosts: app
   become: yes
   roles:
     - fail2ban 
-    # -
-    # -
+    - app
+    # - node_exporter
+
+- hosts: monitoring
+  become: yes
+  roles:
+    - fail2ban
+    # - node_exporter 
+    # - prometheus 
+    # - allertmanager
+    # - grafana 

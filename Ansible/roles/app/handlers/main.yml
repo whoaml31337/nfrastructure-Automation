@@ -1,0 +1,12 @@
+---
+- name: Restart flask-app
+  ansible.builtin.systemd:
+    name: flask-app
+    state: restarted
+    enabled: yes
+  listen: "restart flask app"
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  listen: "reload systemd"

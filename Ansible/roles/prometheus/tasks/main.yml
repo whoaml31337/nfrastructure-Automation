@@ -1,0 +1,44 @@
+---
+- name: Install prometheus
+  ansible.builtin.apt:
+    name: prometheus
+    state: present
+    update_cache: yes
+  become: yes
+  
+- name: Create dir for prometheus
+  ansible.builtin.file:
+    path: /etc/prometheus
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+  become: yes
+
+- name: Deploy prometheus config
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: restart prometheus
+  become: yes
+
+- name: copy alertmanager rules
+  ansible.builtin.copy:
+    src: alert_rules.yml
+    dest: /etc/prometheus/alert_rules.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: restart prometheus
+  become: yes
+
+- name: Ensure prometheus is running
+  ansible.builtin.systemd:
+    name: prometheus
+    state: started
+    enabled: yes
+  become: yes
+    

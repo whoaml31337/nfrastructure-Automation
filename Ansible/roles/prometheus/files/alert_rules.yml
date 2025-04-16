@@ -1,0 +1,29 @@
+groups:
+- name: host-alerts
+  rules:
+  - alert: HighCPUUsage
+    expr: 100 - (avg by(instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU on {{ $labels.instance }}"
+      description: "CPU usage > 80% for 5 minutes!"
+
+  - alert: HighMemoryUsage
+    expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 20
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High Memory on {{ $labels.instance }}"
+      description: "Available memory < 20%!"
+
+  - alert: FlaskAppDown
+    expr: up{job="flask-app"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Flask App is DOWN!"
+      description: "{{ $labels.instance }} не отвечает."

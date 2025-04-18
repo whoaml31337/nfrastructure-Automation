@@ -1,0 +1,37 @@
+{
+    "dashboard": {
+      "title": "Flask App Monitoring",
+      "description": "Dashboard for Flask application metrics",
+      "uid": "flask-app-dash",
+      "panels": [
+        {
+          "title": "HTTP Requests",
+          "type": "graph",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(http_requests_total[5m])",
+              "legendFormat": "Requests"
+            }
+          ]
+        },
+        {
+          "title": "CPU Usage",
+          "type": "stat",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "100 - (avg by(instance)(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+              "legendFormat": "CPU"
+            }
+          ]
+        }
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      }
+    },
+    "folderId": 0,
+    "overwrite": true
+  }

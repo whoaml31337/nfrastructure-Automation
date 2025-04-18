@@ -1,0 +1,54 @@
+---
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://packages.grafana.com/gpg.key
+    state: present
+
+- name: Add Grafana repo
+  ansible.builtin.apt_repository:
+    repo: "deb https://packages.grafana.com/oss/deb stable main"
+    state: present
+    update_cache: yes
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: latest
+    update_cache: yes
+    
+- name: Ensure grafana is running
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Add Prometheus datasource via API
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/api/datasources
+    method: POST
+    body_format: json
+    body:
+      name: "Prometheus"
+      type: "prometheus"
+      url: "http://localhost:9090"
+      access: "proxy"
+      isDefault: true
+    headers:
+      Authorization: "Basic {{ ('admin:admin') | b64encode }}"
+      Content-Type: "application/json"
+    status_code: 200, 409  # 409 если источник уже существует
+    timeout: 10
+
+- name: Import Flask dashboard
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/api/dashboards/db
+    method: POST
+    body_format: json
+    body: "{{ lookup('file', 'files/flask-dashboard.json') | from_json }}"
+    headers:
+      Authorization: "Basic {{ ('admin:admin') | b64encode }}"
+      Content-Type: "application/json"
+    status_code: 200
+    timeout: 20
+    

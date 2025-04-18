@@ -1,0 +1,30 @@
+---
+- name: Install alertmanager
+  ansible.builtin.apt:
+    name: prometheus-alertmanager
+    state: present
+    update_cache: yes
+  become: yes
+  
+- name: Create dir 
+  ansible.builtin.file:
+    path: /etc/alertmanager
+    state: directory
+    mode: 0755
+  become: yes
+
+- name: Deploy alertmanager config
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: /etc/alertmanager/alertmanager.yml
+    mode: "0644"
+  notify: restart alertmanager
+  become: yes
+
+- name: Ensure alertmanager is running
+  ansible.builtin.systemd:
+    name: alertmanager
+    state: started
+    enabled: yes
+  become: yes
+    

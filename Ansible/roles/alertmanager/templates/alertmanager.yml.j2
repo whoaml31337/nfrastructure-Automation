@@ -1,0 +1,23 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'telegram'  # Основной приемник уведомлений
+
+receivers:
+- name: 'telegram'
+  telegram_configs:
+  - bot_token: "{{ telegram_bot_token }}"
+    chat_id: "{{ telegram_chat_id }}"
+    send_resolved: true  # Отправлять уведомления о восстановлении
+    api_url: "https://api.telegram.org"
+
+# Дополнительные приемники (Slack, Email и т.д.)
+- name: 'slack'
+  slack_configs:
+  - api_url: "{{ slack_webhook_url }}"
+    channel: "#monitoring"

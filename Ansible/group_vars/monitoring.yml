@@ -1,0 +1,2 @@
+monitoring_server_ip: 192.168.56.20 
+app_server_ip: 192.168.56.10

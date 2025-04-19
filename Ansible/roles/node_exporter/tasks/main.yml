@@ -1,0 +1,60 @@
+---
+- name: Check current state of /opt/node_exporter
+  ansible.builtin.stat:
+    path: /opt/node_exporter
+  register: opt_node_exporter
+  ignore_errors: yes
+  changed_when: false
+
+- name: Remove existing file if it's not a directory
+  ansible.builtin.file:
+    path: /opt/node_exporter
+    state: absent
+  when: opt_node_exporter.stat.exists and not opt_node_exporter.stat.isdir
+
+- name: Create installation directory
+  ansible.builtin.file:
+    path: /opt/node_exporter
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Check if Node Exporter binary exists
+  ansible.builtin.stat:
+    path: /opt/node_exporter/node_exporter
+  register: binary_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download Node Exporter
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+    checksum: "sha256:ecc41b3b4d53f7b9c16a370419a25a133e48c09dfc49499d63bcc0c5e0cf3d01"
+  when: binary_check is failed or not binary_check.stat.exists
+
+- name: Extract Node Exporter
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /opt/
+    remote_src: yes
+    extra_opts: ["--strip-components=1"]
+    creates: /opt/node_exporter/node_exporter
+  when: binary_check is failed or not binary_check.stat.exists
+
+- name: Deploy systemd service
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart node_exporter
+
+- name: Ensure Node Exporter is running
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+    daemon_reload: yes
